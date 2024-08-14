@@ -1,0 +1,23 @@
+# API Key - from the https://iphub.info website
+api: "..."
+# Connection denial type.
+# 0 – Do not ban in any way (everyone is allowed to enter)
+# 1 — Kick
+# 2 – Ban
+blockType: 1
+# Reason for blocking login
+blockReason: "Your IP/Country is on the Denied List"
+# A flag indicating how to use the lists below.
+# true - lists will work as a whitelist (only they will be able to join)
+# false - as blacklist (only they won't be able to join)
+isWhiteList: true
+# List of country codes - https://countrycode.org/
+countryCodeList:
+- "ZZ" # Unknown country, localhost
+- "RU"
+# IP list.
+# For example:
+# 192.168.0.1
+# 192.168.0.1 - 192.168.0.5
+ipList:
+-  ""

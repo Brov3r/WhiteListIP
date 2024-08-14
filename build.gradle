@@ -1,0 +1,88 @@
+/**
+ * Gradle plugins
+ */
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'java'
+}
+
+
+group = 'com.brov3r.whitelistip'
+version = '1.0'
+
+/**
+ * Path to the compiled Jar file
+ */
+def buildPath = System.getenv('BUILD_PATH') ?: 'build';
+
+/**
+ * Repositories for project dependencies
+ */
+repositories {
+    mavenCentral()
+}
+
+/**
+ * Replacing data with current ones
+ */
+processResources {
+    filesMatching('**/metadata.yml') {
+        filter {
+            it.replace('%PROJECT_VERSION%', version)
+        }
+    }
+}
+
+/**
+ * Project Dependencies
+ */
+dependencies {
+    /**
+     * Project Zomboid
+     * You can download these dependencies on the Avrix releases page (https://github.com/Brov3r/Avrix/releases)
+     */
+    compileOnly files('./libs/ProjectZomboid-core-41.78.16.jar')
+    compileOnly files('./libs/ProjectZomboid-libs-41.78.16.jar')
+
+    /**
+     * Utils
+     * Javassist is used for patching
+     */
+    compileOnly('org.javassist:javassist:3.30.2-GA')
+
+    /**
+     * Avrix Loader
+     * You can download these dependencies on the Avrix releases page (https://github.com/Brov3r/Avrix/releases)
+     */
+    compileOnly files('./libs/Avrix-Core-1.5.2.jar')
+
+    /**
+     * Test
+     */
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testImplementation('org.json:json:20240303')
+}
+
+/**
+ * Project testing
+ */
+test {
+    useJUnitPlatform()
+}
+
+
+/**
+ * Creating a Jar file
+ */
+shadowJar {
+    archiveFileName.set("${rootProject.name}-${version}.jar")
+    destinationDirectory.set(file(buildPath))
+
+    manifest {
+        attributes(
+                'Implementation-Title': rootProject.name,
+                'Implementation-Version': version,
+        )
+    }
+}

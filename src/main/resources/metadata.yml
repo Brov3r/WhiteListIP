@@ -1,0 +1,13 @@
+name: "WhiteList IP"
+id: "whitelistip"
+description: "Blocking unwanted IPs."
+author: "Brov3r"
+version: "%PROJECT_VERSION%" # Do not change it, as it is inserted automatically when building the project
+environment: "server" # or client, or both
+license: "MIT"
+contacts: "https://github.com/brov3r/"
+entrypoints:
+  - "com.brov3r.whitelistip.Main"
+dependencies:
+  pz-core: ">=41.78.16"
+  avrix-loader: ">=1.5.0"
