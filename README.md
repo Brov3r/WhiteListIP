@@ -11,6 +11,8 @@
 
 **WhiteListIP** - A tool to block connections with unwanted IP/country
 
+If you have an API key and successfully receive a country code, plugin will check against country codes, otherwise against the IP list
+
 # How to use
 
 1) Install [AvrixLoader](https://github.com/Brov3r/Avrix)
