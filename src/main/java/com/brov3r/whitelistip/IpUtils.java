@@ -25,68 +25,65 @@ public class IpUtils {
      */
     public static void checkIP(String targetIP, UdpConnection connection) {
         CompletableFuture.runAsync(() -> {
-            // Check the configuration for the necessary data
             if (Main.getConfig().getInt("blockType") == 0) return;
 
             boolean isWhiteList = Main.getConfig().getBoolean("isWhiteList");
             boolean isShouldBlock = false;
             String ip = targetIP.trim();
 
-            // IP Validity Check
             if (!isValidIp(ip)) return;
 
-            // Get lists of countries and IP addresses from the configuration
             List<String> countryList = Main.getConfig().getStringList("countryCodeList");
             List<String> ipList = Main.getConfig().getStringList("ipList");
 
-            String ipCountry = null;
+            String ipCountry;
+            boolean countryChecked = false;
 
             if (Main.getConfig().getString("api") != null && !Main.getConfig().getString("api").isEmpty()){
                 String api = Main.getConfig().getString("api").trim();
-
                 ipCountry = getIpCountryCode(ip, api);
 
-                // Get the country code for an IP address using the API
                 if (ipCountry != null && !ipCountry.isEmpty()){
-                    // Checking a country against a list of countries
-                    boolean countryMatches = false;
-                    for (String country : countryList) {
-                        if (country.equalsIgnoreCase(ipCountry.trim())) {
-                            countryMatches = true;
-                            break;
-                        }
+                    boolean countryMatches = countryList.stream().anyMatch(country -> country.equalsIgnoreCase(ipCountry.trim()));
+
+                    // Whitelist: the country did not coincide - we block it
+                    if (isWhiteList && !countryMatches) {
+                        isShouldBlock = true;
                     }
 
-                    // If the list is white and the country does not match, we punish the player
-                    if (isWhiteList && !countryMatches) isShouldBlock = true;
+                    // Blacklist: the country coincided - we block it
+                    if (!isWhiteList && countryMatches) {
+                        isShouldBlock = true;
+                    }
 
-                    // If the list is black and the country match, we punish the player
-                    if (!isWhiteList && countryMatches) isShouldBlock = true;
+                    countryChecked = true;
+                }
+            } else {
+                ipCountry = null;
+            }
+
+            if (!countryChecked) {
+                boolean ipMatches = ipList.stream().anyMatch(ipInList -> {
+                    ipInList = ipInList.trim();
+                    if (isRangeFormat(ipInList)) {
+                        return ipInRange(ip, ipInList);
+                    } else {
+                        return ipInList.equalsIgnoreCase(ip);
+                    }
+                });
+
+                // Whitelist: IP does not match – block
+                if (isWhiteList && !ipMatches) {
+                    isShouldBlock = true;
+                }
+
+                // Blacklist: IP matched – block
+                if (!isWhiteList && ipMatches) {
+                    isShouldBlock = true;
                 }
             }
 
-            boolean ipMatches = false;
-
-            // IP Address List Checker
-            for (String ipInList : ipList) {
-                ipInList = ipInList.trim();
-                if (isRangeFormat(ipInList)) {
-                    if (ipInRange(ip, ipInList)) {
-                        ipMatches = true;
-                        break;
-                    }
-                } else if (ipInList.equalsIgnoreCase(ip)) {
-                    ipMatches = true;
-                    break;
-                }
-            }
-
-            // If the IP address matches and the list is black, we penalize the player
-            if (ipMatches && !isWhiteList) isShouldBlock = true;
-
-            // If the IP address does not match and the list is white, we punish the player
-            if (!ipMatches && isWhiteList) isShouldBlock = true;
-
+            // Finally, we apply punishment
             if (isShouldBlock) {
                 System.out.println("[?] WhiteListIP - Blocking connection: IP = " + ip + ", Country = " + (ipCountry != null ? ipCountry : "Unknown"));
                 punishPlayer(connection);
